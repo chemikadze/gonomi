@@ -42,9 +42,8 @@ func TestSimpleDeclaration(t *testing.T) {
 					},
 					map[string]LeafInterface{
 						"myinterface": LeafInterface{
-							"mypin": DirectedPinType{
-								Sends,
-								SignalPin{StringDataType{}},
+							Pins: map[string]DirectedPinType{
+								"mypin": {Sends, SignalPin{StringDataType{}}},
 							},
 						},
 					}},

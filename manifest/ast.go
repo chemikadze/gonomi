@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"reflect"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ type Configuration map[string]interface{}
 type CompositeComponent struct {
 	Type          Type
 	Configuration Configuration
-	Children      map[string]Component
+	Components    map[string]Component
 	Interfaces    map[string]CompositeInterface
 	Bindings      []Binding
 }
@@ -76,6 +77,10 @@ type Application struct {
 	CompositeComponent
 }
 
+func (c Application) Equal(other Application) bool {
+	return reflect.DeepEqual(c, other)
+}
+
 // component without children
 type LeafComponent struct {
 	Type          Type
@@ -91,7 +96,10 @@ func (c LeafComponent) GetConfiguration() map[string]interface{} {
 	return c.Configuration
 }
 
-type LeafInterface map[string]DirectedPinType
+type LeafInterface struct {
+	Pins     map[string]DirectedPinType
+	Required bool
+}
 
 // pin in interface
 type DirectedPinType struct {
