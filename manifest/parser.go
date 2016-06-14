@@ -2,21 +2,13 @@ package manifest
 
 import (
 	"fmt"
+	"github.com/chemikadze/gonomi/manifest/datatype"
+	"github.com/chemikadze/gonomi/manifest/parsing"
 	"gopkg.in/yaml.v2"
 	"strings"
 )
 
 var _ = fmt.Printf
-
-type ManifestError struct {
-	message string
-	line    int
-	column  int
-}
-
-func (e ManifestError) Error() string {
-	return e.message
-}
 
 type applicationRoot struct {
 	Application application `yaml:application`
@@ -109,33 +101,15 @@ func parseDirectedPinType(repr string) (DirectedPinType, error) {
 	pinAndTypes[1] = pinAndTypes[1][:len(pinAndTypes[1])-1]
 	switch pinAndTypes[0] {
 	case "publish-signal":
-		t, _ := parseDataType(pinAndTypes[1])
+		t, _ := datatype.Parse(pinAndTypes[1])
 		return DirectedPinType{Sends, SignalPin{t}}, nil
 	case "consume-signal":
-		t, _ := parseDataType(pinAndTypes[1])
+		t, _ := datatype.Parse(pinAndTypes[1])
 		return DirectedPinType{Receives, SignalPin{t}}, nil
 	case "send-command": // FIXME
-		return DirectedPinType{Sends, CommandPin{RecordDataType{}, RecordDataType{}, RecordDataType{}}}, nil
+		return DirectedPinType{Sends, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}}, nil
 	case "receive-command": // FIXME
-		return DirectedPinType{Receives, CommandPin{RecordDataType{}, RecordDataType{}, RecordDataType{}}}, nil
+		return DirectedPinType{Receives, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}}, nil
 	}
-	return DirectedPinType{}, ManifestError{"error", 0, 0}
-}
-
-func parseDataType(repr string) (DataType, error) {
-	typenameAndTypeParameters := strings.SplitN(repr, "<", 2)
-	switch typenameAndTypeParameters[0] {
-	case "int":
-		return IntDataType{}, nil
-	case "bool":
-		return BoolDataType{}, nil
-	case "string":
-		return StringDataType{}, nil
-	case "list":
-		param := typenameAndTypeParameters[1]
-		typeParameter, err := parseDataType(param[:len(param)-1])
-		return ListDataType{typeParameter}, err
-		// FIXME map, record
-	}
-	return DataType(nil), ManifestError{"Unknown type " + repr, 0, 0}
+	return DirectedPinType{}, parsing.ManifestError{"error", 0, 0}
 }

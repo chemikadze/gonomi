@@ -1,8 +1,8 @@
 package manifest
 
 import (
+	"github.com/chemikadze/gonomi/manifest/datatype"
 	"reflect"
-	"strings"
 )
 
 const (
@@ -132,7 +132,7 @@ type PinType interface {
 }
 
 type SignalPin struct {
-	DataType DataType
+	DataType datatype.DataType
 }
 
 func (s SignalPin) PinTypeName() string {
@@ -140,7 +140,7 @@ func (s SignalPin) PinTypeName() string {
 }
 
 type ConfigurationPin struct {
-	DataType DataType
+	DataType datatype.DataType
 }
 
 func (s ConfigurationPin) PinTypeName() string {
@@ -148,63 +148,11 @@ func (s ConfigurationPin) PinTypeName() string {
 }
 
 type CommandPin struct {
-	Arguments RecordDataType
-	Progress  RecordDataType
-	Result    RecordDataType
+	Arguments datatype.Record
+	Progress  datatype.Record
+	Result    datatype.Record
 }
 
 func (s CommandPin) PinTypeName() string {
 	return "command"
-}
-
-// data types
-type DataType interface {
-	DataTypeName() string
-}
-
-type StringDataType struct{}
-
-func (StringDataType) DataTypeName() string {
-	return "string"
-}
-
-type IntDataType struct{}
-
-func (IntDataType) DataTypeName() string {
-	return "int"
-}
-
-type BoolDataType struct{}
-
-func (BoolDataType) DataTypeName() string {
-	return "bool"
-}
-
-type ListDataType struct {
-	ElementDataType DataType
-}
-
-func (l ListDataType) DataTypeName() string {
-	return "list<" + l.ElementDataType.DataTypeName() + ">"
-}
-
-type MapDataType struct {
-	KeyDataType   DataType
-	ValueDataType DataType
-}
-
-func (m MapDataType) DataTypeName() string {
-	return "map<" + m.KeyDataType.DataTypeName() + ", " + m.ValueDataType.DataTypeName() + ">"
-}
-
-type RecordDataType struct {
-	Fields map[string]DataType
-}
-
-func (r RecordDataType) DataTypeName() string {
-	items := make([]string, 0, 5)
-	for key, value := range r.Fields {
-		items = append(items, value.DataTypeName()+" "+key)
-	}
-	return "record<" + strings.Join(items, ", ") + ">"
 }

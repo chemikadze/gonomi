@@ -1,32 +1,9 @@
 package manifest
 
 import (
+	"github.com/chemikadze/gonomi/manifest/datatype"
 	"testing"
 )
-
-type typeCase struct {
-	DataType DataType
-	Result   string
-}
-
-func TestComponentTypes(t *testing.T) {
-	cases := []typeCase{
-		typeCase{StringDataType{}, "string"},
-		typeCase{IntDataType{}, "int"},
-		typeCase{BoolDataType{}, "bool"},
-		typeCase{ListDataType{BoolDataType{}}, "list<bool>"},
-		typeCase{ListDataType{ListDataType{BoolDataType{}}}, "list<list<bool>>"},
-		typeCase{MapDataType{IntDataType{}, BoolDataType{}}, "map<int, bool>"},
-		typeCase{RecordDataType{map[string]DataType{
-			"a": IntDataType{},
-			"b": ListDataType{BoolDataType{}}}}, "record<int a, list<bool> b>"},
-	}
-	for _, el := range cases {
-		if el.DataType.DataTypeName() != el.Result {
-			t.Error(el.DataType.DataTypeName(), el.Result)
-		}
-	}
-}
 
 func TestSimpleDeclaration(t *testing.T) {
 	app := Application{
@@ -43,7 +20,7 @@ func TestSimpleDeclaration(t *testing.T) {
 					map[string]LeafInterface{
 						"myinterface": LeafInterface{
 							Pins: map[string]DirectedPinType{
-								"mypin": {Sends, SignalPin{StringDataType{}}},
+								"mypin": {Sends, SignalPin{datatype.String{}}},
 							},
 						},
 					}},

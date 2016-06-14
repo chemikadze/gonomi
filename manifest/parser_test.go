@@ -2,7 +2,7 @@ package manifest
 
 import (
 	"fmt"
-	"reflect"
+	"github.com/chemikadze/gonomi/manifest/datatype"
 	"testing"
 )
 
@@ -106,40 +106,19 @@ func TestInterface(t *testing.T) {
 				Interfaces: map[string]LeafInterface{
 					"myinterface": LeafInterface{
 						Pins: map[string]DirectedPinType{
-							"mypin1": {Sends, SignalPin{StringDataType{}}},
-							"mypin2": {Receives, SignalPin{StringDataType{}}},
-							"mypin3": {Sends, CommandPin{RecordDataType{}, RecordDataType{}, RecordDataType{}}},
+							"mypin1": {Sends, SignalPin{datatype.String{}}},
+							"mypin2": {Receives, SignalPin{datatype.String{}}},
+							"mypin3": {Sends, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}},
 							"mypin4": {Receives, CommandPin{}},
 						},
 					},
 					"myrequired": LeafInterface{
 						Pins: map[string]DirectedPinType{
-							"mypin": {Sends, SignalPin{StringDataType{}}},
+							"mypin": {Sends, SignalPin{datatype.String{}}},
 						},
 						Required: true,
 					},
 				},
 			},
 		}}})
-}
-
-func TestPinTypes(t *testing.T) {
-	cases := map[string]DataType{
-		"int":                IntDataType{},
-		"string":             StringDataType{},
-		"bool":               BoolDataType{},
-		"list<string>":       ListDataType{StringDataType{}},
-		"list<list<string>>": ListDataType{ListDataType{StringDataType{}}},
-		// "list< list <string> >": ListDataType{ListDataType{StringDataType{}}},
-		// "map<string, string>":   MapDataType{StringDataType{}, StringDataType{}},
-	}
-	for manifest, expected := range cases {
-		parsed, err := parseDataType(manifest)
-		if err != nil {
-			t.Error(err)
-		}
-		if !reflect.DeepEqual(parsed, expected) {
-			t.Errorf("\nParsed: %v\nExpect: %v", parsed, expected)
-		}
-	}
 }
