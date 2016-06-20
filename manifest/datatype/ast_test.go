@@ -6,24 +6,35 @@ import (
 
 type typeCase struct {
 	DataType DataType
-	Result   string
+	Results  []string
 }
 
 func TestDataTypes(t *testing.T) {
 	cases := []typeCase{
-		typeCase{String{}, "string"},
-		typeCase{Int{}, "int"},
-		typeCase{Bool{}, "bool"},
-		typeCase{List{Bool{}}, "list<bool>"},
-		typeCase{List{List{Bool{}}}, "list<list<bool>>"},
-		typeCase{Map{Int{}, Bool{}}, "map<int, bool>"},
-		typeCase{Record{map[string]DataType{
-			"a": Int{},
-			"b": List{Bool{}}}}, "record<int a, list<bool> b>"},
+		typeCase{String{}, []string{"string"}},
+		typeCase{Int{}, []string{"int"}},
+		typeCase{Bool{}, []string{"bool"}},
+		typeCase{List{Bool{}}, []string{"list<bool>"}},
+		typeCase{List{List{Bool{}}}, []string{"list<list<bool>>"}},
+		typeCase{Map{Int{}, Bool{}}, []string{"map<int, bool>"}},
+		typeCase{
+			Record{map[string]DataType{
+				"a": Int{},
+				"b": List{Bool{}}},
+			},
+			[]string{"record<int a, list<bool> b>", "record<list<bool> b, int a>"}},
 	}
 	for _, el := range cases {
-		if el.DataType.DataTypeName() != el.Result {
-			t.Error(el.DataType.DataTypeName(), el.Result)
+		name := el.DataType.DataTypeName()
+		ok := false
+		for _, element := range el.Results {
+			if name == element {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			t.Error(name, el.Results[0])
 		}
 	}
 }
