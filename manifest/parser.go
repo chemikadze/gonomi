@@ -28,6 +28,8 @@ type component struct {
 }
 
 func Parse(manifest string) (Application, error) {
+	// TODO: composite components
+	// TODO: bindings for nested components
 	m := applicationRoot{}
 	err := yaml.Unmarshal([]byte(manifest), &m)
 	if err != nil {
@@ -47,10 +49,14 @@ func parseComponents(components map[string]component) (map[string]Component, err
 	}
 	acc := make(map[string]Component)
 	for id, component := range components {
+		interfaces, err := yamlMapToInterfacesMap(component.Interfaces)
+		if err != nil {
+			return nil, err
+		}
 		leafComponent := LeafComponent{
 			Type:          Type{component.Type},
 			Configuration: Configuration(yamlMapToSimpleMap(component.Configuration)),
-			Interfaces:    yamlMapToInterfacesMap(component.Interfaces),
+			Interfaces:    interfaces,
 		}
 		for _, reqname := range component.Required {
 			switch reqname := reqname.(type) {
@@ -76,30 +82,37 @@ func yamlMapToSimpleMap(original map[interface{}]interface{}) map[string]interfa
 	return result
 }
 
-func yamlMapToInterfacesMap(original map[interface{}]map[interface{}]interface{}) map[string]LeafInterface {
+func yamlMapToInterfacesMap(original map[interface{}]map[interface{}]interface{}) (map[string]LeafInterface, error) {
 	result := make(map[string]LeafInterface)
 	for k, v := range original {
 		switch t := k.(type) {
 		case string:
-			result[t] = parseLeafInterface(v)
+			value, err := parseLeafInterface(v)
+			if err != nil {
+				return nil, err
+			}
+			result[t] = value
 		}
 	}
-	return result
+	return result, nil
 }
 
-func parseLeafInterface(original map[interface{}]interface{}) LeafInterface {
+func parseLeafInterface(original map[interface{}]interface{}) (LeafInterface, error) {
 	result := make(map[string]DirectedPinType)
 	for k, v := range original {
 		switch k := k.(type) {
 		case string:
 			switch v := v.(type) {
 			case string:
-				pinType, _ := parseDirectedPinType(v) // FIXME
+				pinType, err := parseDirectedPinType(v)
+				if err != nil {
+					return LeafInterface{}, err
+				}
 				result[k] = pinType
 			}
 		}
 	}
-	return LeafInterface{result, false}
+	return LeafInterface{result, false}, nil
 }
 
 func parseDirectedPinType(repr string) (DirectedPinType, error) {
@@ -112,12 +125,13 @@ func parseDirectedPinType(repr string) (DirectedPinType, error) {
 	case "consume-signal":
 		t, _ := datatype.Parse(pinAndTypes[1])
 		return DirectedPinType{Receives, SignalPin{t}}, nil
-	case "send-command": // FIXME
+	case "send-command": // FIXME: correct parameter parsing
 		return DirectedPinType{Sends, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}}, nil
-	case "receive-command": // FIXME
+	case "receive-command": // FIXME: correct parameter parsing
 		return DirectedPinType{Receives, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}}, nil
+	default:
+		return DirectedPinType{}, parsing.ManifestError{fmt.Sprintf("Unknown pin type: %s", pinAndTypes[0]), 0, 0}
 	}
-	return DirectedPinType{}, parsing.ManifestError{"error", 0, 0}
 }
 
 func parseBindings(repr [][]string) ([]Binding, error) {
