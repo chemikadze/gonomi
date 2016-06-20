@@ -39,8 +39,8 @@ func TestSimpleDeclaration(t *testing.T) {
 			},
 			[]Binding{
 				Binding{
-					ComponentBindingTarget{"other"},
-					InterfaceBindingTarget{"main", "myinterface"}}}}}
+					ComponentBindingTarget{ComponentId{[]string{"other"}}},
+					InterfaceBindingTarget{ComponentId{[]string{"main"}}, "myinterface"}}}}}
 	if &app == nil {
 		t.Error("WAT") // mock condition to work around unused warning
 	}

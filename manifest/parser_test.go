@@ -25,8 +25,8 @@ func TestEmptyComponents(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if (!app.Equal(Application{CompositeComponent{Components: make(map[string]Component)}})) {
-		t.Error("App should be empty application")
+	if (!app.Equal(Application{})) {
+		t.Error("App should be empty application, got:", app)
 	}
 	fmt.Println(err)
 }
@@ -120,5 +120,35 @@ func TestInterface(t *testing.T) {
 					},
 				},
 			},
+		}}})
+}
+
+func TestBindings(t *testing.T) {
+	testManifest(t, `
+        application:
+            components:
+                x:
+                    type: test.Component
+                y:
+                    type: test.Component
+            bindings:
+                - [x, y]
+                - [x#i, y]
+    `, Application{CompositeComponent{
+		Components: map[string]Component{
+			"x": LeafComponent{
+				Type:          Type{"test.Component"},
+				Configuration: Configuration{},
+				Interfaces:    map[string]LeafInterface{},
+			},
+			"y": LeafComponent{
+				Type:          Type{"test.Component"},
+				Configuration: Configuration{},
+				Interfaces:    map[string]LeafInterface{},
+			},
+		},
+		Bindings: []Binding{
+			{ComponentBindingTarget{ComponentId{[]string{"x"}}}, ComponentBindingTarget{ComponentId{[]string{"y"}}}},
+			{InterfaceBindingTarget{ComponentId{[]string{"x"}}, "i"}, ComponentBindingTarget{ComponentId{[]string{"y"}}}},
 		}}})
 }

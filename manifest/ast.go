@@ -18,6 +18,10 @@ type PinId struct {
 	Pin       string
 }
 
+type ComponentId struct {
+	Path []string
+}
+
 type Component interface {
 	GetType() Type
 	GetConfiguration() map[string]interface{}
@@ -61,13 +65,13 @@ type BindingTarget interface {
 }
 
 type ComponentBindingTarget struct {
-	Component string
+	Component ComponentId
 }
 
 func (c ComponentBindingTarget) IsBindingTarget() {}
 
 type InterfaceBindingTarget struct {
-	Component string
+	Component ComponentId
 	Interface string
 }
 

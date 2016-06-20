@@ -16,6 +16,7 @@ type applicationRoot struct {
 
 type application struct {
 	Components map[string]component `yaml:components`
+	Bindings   [][]string           `yaml:bindings`
 }
 
 type component struct {
@@ -23,6 +24,7 @@ type component struct {
 	Configuration map[interface{}]interface{}                 `yaml:configuration`
 	Interfaces    map[interface{}]map[interface{}]interface{} `yaml:interfaces`
 	Required      []interface{}                               `yaml:required`
+	Bindings      []interface{}                               `yaml:bindings`
 }
 
 func Parse(manifest string) (Application, error) {
@@ -35,10 +37,14 @@ func Parse(manifest string) (Application, error) {
 	if err != nil {
 		return Application{}, err
 	}
-	return Application{CompositeComponent{Components: components}}, err
+	bindings, err := parseBindings(m.Application.Bindings)
+	return Application{CompositeComponent{Components: components, Bindings: bindings}}, err
 }
 
 func parseComponents(components map[string]component) (map[string]Component, error) {
+	if len(components) == 0 {
+		return nil, nil
+	}
 	acc := make(map[string]Component)
 	for id, component := range components {
 		leafComponent := LeafComponent{
@@ -112,4 +118,45 @@ func parseDirectedPinType(repr string) (DirectedPinType, error) {
 		return DirectedPinType{Receives, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}}, nil
 	}
 	return DirectedPinType{}, parsing.ManifestError{"error", 0, 0}
+}
+
+func parseBindings(repr [][]string) ([]Binding, error) {
+	if len(repr) == 0 {
+		return nil, nil
+	}
+	bindings := make([]Binding, 0, len(repr))
+	for _, binding := range repr {
+		if len(binding) != 2 {
+			return nil, parsing.ManifestError{fmt.Sprintf("Expected list of two for binding, got: %s", binding), 0, 0}
+		}
+		binding, err := parseBinding(binding[0], binding[1])
+		if err != nil {
+			return nil, err
+		}
+		bindings = append(bindings, binding)
+	}
+	return bindings, nil
+}
+
+func parseBinding(left, right string) (Binding, error) {
+	first, err := parseBindingTarget(left)
+	if err != nil {
+		return Binding{}, err
+	}
+	second, err := parseBindingTarget(right)
+	if err != nil {
+		return Binding{}, err
+	}
+	return Binding{first, second}, nil
+}
+
+func parseBindingTarget(target string) (BindingTarget, error) {
+	splitted := strings.Split(target, "#")
+	if len(splitted) == 1 {
+		return ComponentBindingTarget{ComponentId{strings.Split(splitted[0], ".")}}, nil
+	} else if len(splitted) == 2 {
+		return InterfaceBindingTarget{ComponentId{strings.Split(splitted[0], ".")}, splitted[1]}, nil
+	} else {
+		return nil, parsing.ManifestError{fmt.Sprintf("Unexpected binding target: %s", target), 0, 0}
+	}
 }
