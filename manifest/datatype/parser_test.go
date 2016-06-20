@@ -1,21 +1,19 @@
 package datatype
 
 import (
-	"bufio"
 	"reflect"
-	"strings"
 	"testing"
 )
 
 type testValue struct {
-	tokenType tokenType
+	tokenType TokenType
 	value     string
 }
 
 func checkTokens(t *testing.T, input string, expectedResult []testValue) {
-	r := tokenReader{bufio.NewReader(strings.NewReader(input))}
-	if len(expectedResult) == 0 || expectedResult[len(expectedResult)-1].tokenType != EOF {
-		expectedResult = append(expectedResult, testValue{EOF, ""})
+	r := NewTokenReader(input)
+	if len(expectedResult) == 0 || expectedResult[len(expectedResult)-1].tokenType != TOKEN_EOF {
+		expectedResult = append(expectedResult, testValue{TOKEN_EOF, ""})
 	}
 	for _, expected := range expectedResult {
 		tokenType, value := r.Read()
@@ -30,38 +28,38 @@ func checkTokens(t *testing.T, input string, expectedResult []testValue) {
 
 func TestTokens(t *testing.T) {
 	checkTokens(t, "", []testValue{})
-	checkTokens(t, "", []testValue{testValue{EOF, ""}})
-	checkTokens(t, ",", []testValue{testValue{COMMA, ","}})
-	checkTokens(t, "<", []testValue{testValue{OPEN_BRK, "<"}})
-	checkTokens(t, ">", []testValue{testValue{CLOSING_BRK, ">"}})
-	checkTokens(t, "test", []testValue{testValue{ALPHANUM, "test"}})
-	checkTokens(t, "0", []testValue{testValue{ERROR, "0"}})
-	checkTokens(t, "tes_t0", []testValue{testValue{ALPHANUM, "tes_t0"}})
+	checkTokens(t, "", []testValue{testValue{TOKEN_EOF, ""}})
+	checkTokens(t, ",", []testValue{testValue{TOKEN_COMMA, ","}})
+	checkTokens(t, "<", []testValue{testValue{TOKEN_OPEN_BRK, "<"}})
+	checkTokens(t, ">", []testValue{testValue{TOKEN_CLOSING_BRK, ">"}})
+	checkTokens(t, "test", []testValue{testValue{TOKEN_ALPHANUM, "test"}})
+	checkTokens(t, "0", []testValue{testValue{TOKEN_ERROR, "0"}})
+	checkTokens(t, "tes_t0", []testValue{testValue{TOKEN_ALPHANUM, "tes_t0"}})
 	checkTokens(t, "list<string>", []testValue{
-		testValue{ALPHANUM, "list"},
-		testValue{OPEN_BRK, "<"},
-		testValue{ALPHANUM, "string"},
-		testValue{CLOSING_BRK, ">"},
+		testValue{TOKEN_ALPHANUM, "list"},
+		testValue{TOKEN_OPEN_BRK, "<"},
+		testValue{TOKEN_ALPHANUM, "string"},
+		testValue{TOKEN_CLOSING_BRK, ">"},
 	})
 	checkTokens(t, "list< list <string> >", []testValue{
-		testValue{ALPHANUM, "list"},
-		testValue{OPEN_BRK, "<"},
-		testValue{ALPHANUM, "list"},
-		testValue{OPEN_BRK, "<"},
-		testValue{ALPHANUM, "string"},
-		testValue{CLOSING_BRK, ">"},
-		testValue{CLOSING_BRK, ">"},
+		testValue{TOKEN_ALPHANUM, "list"},
+		testValue{TOKEN_OPEN_BRK, "<"},
+		testValue{TOKEN_ALPHANUM, "list"},
+		testValue{TOKEN_OPEN_BRK, "<"},
+		testValue{TOKEN_ALPHANUM, "string"},
+		testValue{TOKEN_CLOSING_BRK, ">"},
+		testValue{TOKEN_CLOSING_BRK, ">"},
 	})
 	checkTokens(t, "list<map<string,string>>", []testValue{
-		testValue{ALPHANUM, "list"},
-		testValue{OPEN_BRK, "<"},
-		testValue{ALPHANUM, "map"},
-		testValue{OPEN_BRK, "<"},
-		testValue{ALPHANUM, "string"},
-		testValue{COMMA, ","},
-		testValue{ALPHANUM, "string"},
-		testValue{CLOSING_BRK, ">"},
-		testValue{CLOSING_BRK, ">"},
+		testValue{TOKEN_ALPHANUM, "list"},
+		testValue{TOKEN_OPEN_BRK, "<"},
+		testValue{TOKEN_ALPHANUM, "map"},
+		testValue{TOKEN_OPEN_BRK, "<"},
+		testValue{TOKEN_ALPHANUM, "string"},
+		testValue{TOKEN_COMMA, ","},
+		testValue{TOKEN_ALPHANUM, "string"},
+		testValue{TOKEN_CLOSING_BRK, ">"},
+		testValue{TOKEN_CLOSING_BRK, ">"},
 	})
 }
 

@@ -110,6 +110,7 @@ func TestInterface(t *testing.T) {
                             mypin2: consume-signal(string)
                             mypin3: send-command()
                             mypin4: receive-command()
+                            mypin5: send-command(string x, int y)
                         myrequired:
                             mypin: publish-signal(string)
                     required: [myrequired]
@@ -125,6 +126,7 @@ func TestInterface(t *testing.T) {
 							"mypin2": {Receives, SignalPin{datatype.String{}}},
 							"mypin3": {Sends, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}},
 							"mypin4": {Receives, CommandPin{}},
+							"mypin5": {Sends, CommandPin{Arguments: datatype.Record{map[string]datatype.DataType{"x": datatype.String{}, "y": datatype.Int{}}}}},
 						},
 					},
 					"myrequired": LeafInterface{

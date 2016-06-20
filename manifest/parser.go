@@ -125,13 +125,41 @@ func parseDirectedPinType(repr string) (DirectedPinType, error) {
 	case "consume-signal":
 		t, _ := datatype.Parse(pinAndTypes[1])
 		return DirectedPinType{Receives, SignalPin{t}}, nil
-	case "send-command": // FIXME: correct parameter parsing
-		return DirectedPinType{Sends, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}}, nil
-	case "receive-command": // FIXME: correct parameter parsing
-		return DirectedPinType{Receives, CommandPin{datatype.Record{}, datatype.Record{}, datatype.Record{}}}, nil
+	case "send-command", "receive-command": // FIXME: correct parameter parsing
+		result, err := parseCommand(repr)
+		return result, err
 	default:
 		return DirectedPinType{}, parsing.ManifestError{fmt.Sprintf("Unknown pin type: %s", pinAndTypes[0]), 0, 0}
 	}
+}
+
+func parseCommand(repr string) (DirectedPinType, error) {
+	tokenizer := datatype.NewTokenReader(repr)
+	ttype, token := tokenizer.Read()
+	if ttype != datatype.TOKEN_ALPHANUM {
+		return DirectedPinType{}, parsing.ManifestError{"Unexpected token: %s", 0, 0}
+	}
+	direction := Receives
+	if strings.HasPrefix(token, "send") {
+		direction = Sends
+	}
+	err := tokenizer.ReadAssertToken(datatype.TOKEN_OPEN_BRS)
+	if err != nil {
+		return DirectedPinType{}, err
+	}
+	args := [3]datatype.Record{}
+	for i := 0; i < 3; i++ {
+		stopTokens := []datatype.TokenType{datatype.TOKEN_CLOSING_BRS, datatype.TOKEN_COMMA, datatype.TOKEN_EOF}
+		if i == 2 {
+			stopTokens = []datatype.TokenType{datatype.TOKEN_CLOSING_BRS, datatype.TOKEN_EOF}
+		}
+		body, err := datatype.ParseRecordBodyFromTokens(&tokenizer, stopTokens)
+		if err != nil {
+			return DirectedPinType{}, err
+		}
+		args[i] = datatype.Record{body}
+	}
+	return DirectedPinType{direction, CommandPin{args[0], args[1], args[2]}}, nil
 }
 
 func parseBindings(repr [][]string) ([]Binding, error) {
